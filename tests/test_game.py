@@ -15,10 +15,12 @@ def test_game():
     game = session.new()
     assert game.state == [None, None, None, None]
     assert game.attempts_left == 5
+
     assert game.play('t')
     assert game.state == ['t', None, None, 't']
     assert game.score == 100
     assert not game.finished
+
     assert game.play('e')
     assert game.play('s')
     assert game.score == 100
@@ -32,10 +34,12 @@ def test_game_failure():
     game = session.new()
     assert game.state == [None, None, None, None]
     assert game.attempts_left == 5
+
     assert not game.play('a')
     assert game.state == [None, None, None, None]
     assert game.score == 80
     assert not game.finished
+
     assert not game.play('b')
     assert not game.play('c')
     assert not game.play('d')

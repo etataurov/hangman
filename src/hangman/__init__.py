@@ -1,1 +1,1 @@
-from .main import GameSession, Game
+from .game import GameSession, Game

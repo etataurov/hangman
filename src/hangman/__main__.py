@@ -1,56 +1,61 @@
-from .main import GameSession
+from .game import GameSession
 
 
 class TerminalPlayer:
-    def render_game(self, game):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(exc_val, KeyboardInterrupt):
+            print("Thanks for playing")
+            return True
+
+    def render_game(self, session, game, last_success=None):
         state = " ".join(["_" if l is None else l.upper() for l in game.state])
-        print(f"{state}, attempts left: {game.attempts_left}")
+        to_render = [state]
+        if not game.finished:
+            to_render.append(f"attempts left: {game.attempts_left}")
+        elif last_success:
+            to_render.append("Congratulations")
+            to_render.append(f"Highest score: {session.high_score}")
+        else:
+            to_render.append("Game Over")
+        print(", ".join(to_render))
 
     def get_input(self):
-        result = input("Enter a letter: ")
+        while True:
+            result = input("Enter a letter and press ENTER: ")
+            if len(result) != 1:
+                print("Please enter a single letter")
+            else:
+                break
         return result
-
-    def render_correct(self):
-        print("Correct")
-
-    def render_incorrect(self):
-        print("Incorrect")
-
-    def render_highscore(self, score):
-        print(f"Highest score: {score}")
 
     def ask_continue(self) -> bool:
         try:
-            input('Continue?')
+            input('Press Enter to continue, Ctrl+C to exit')
             return True
         except KeyboardInterrupt:
             return False
 
-    def render_close(self):
-        print("Thanks for playing")
 
-
-def main():
-    words = ['3dhubs', 'marvin', 'print', 'filament', 'order', 'layer']
-    session = GameSession(words)
-    player = TerminalPlayer()
-    while True:
-        game = session.new()
+def main(words=None, player=None):
+    session = GameSession(words) if words else GameSession.with_default_words()
+    player = TerminalPlayer() if player is None else player
+    with player:
         while True:
-            player.render_game(game)
-            let = player.get_input()
-            if game.play(let):
-                player.render_correct()
+            game = session.new()
+            player.render_game(session, game)
+            while True:
+                letter = player.get_input()
+                success = game.play(letter)
+                player.render_game(session, game, last_success=success)
+                if game.finished:
+                    break
+            if player.ask_continue():
+                continue
             else:
-                player.render_incorrect()
-            if game.finished:
                 break
-        player.render_highscore(session.high_score)
-        if player.ask_continue():
-            continue
-        else:
-            break
-    player.render_close()
 
 
 if __name__ == '__main__':
