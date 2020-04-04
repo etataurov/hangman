@@ -1,4 +1,4 @@
-from main import GameSession
+from hangman import GameSession
 
 
 def test_game_session():
